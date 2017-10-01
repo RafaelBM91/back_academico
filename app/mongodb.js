@@ -94,8 +94,8 @@ const AsignaturaSchema = new mongoose.Schema({
 
 const HorarioSchema = new mongoose.Schema({
   dia: { type: Number },
-	desde: { type: Date },
-  hasta: { type: Date },
+	desde: { type: String },
+  hasta: { type: String },
   detalle: { type: String },
   _id_asignatura: { type: String }
 },{

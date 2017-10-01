@@ -136,16 +136,6 @@ const Profesor = new GraphQLObjectType({
   }
 })
 
-const Asignatura = new GraphQLObjectType({
-  name: "Asignatura",
-  fields: {
-    _id: { type: GraphQLID },
-		_id_periodo: { type: GraphQLID },
-		_id_profesor: { type: GraphQLID },
-		_id_materia: { type: GraphQLID },
-  }
-})
-
 const Horario = new GraphQLObjectType({
   name: "Horario",
   fields: {
@@ -153,8 +143,38 @@ const Horario = new GraphQLObjectType({
 		dia: { type: GraphQLInt },
 		desde: { type: GraphQLString },
 		hasta: { type: GraphQLString },
-		detalle: { type: GraphQLString },
-		_id_asignatura: { type: GraphQLID }
+		detalle: { type: GraphQLString }
+  }
+})
+
+const Asignatura = new GraphQLObjectType({
+  name: "Asignatura",
+  fields: {
+    _id: { type: GraphQLID },
+		periodo: {
+			type: Periodo,
+			args: {},
+			resolve: (_,{}) =>
+				Periododb.findOne({ _id: _._id_periodo })
+		},
+		profesor: {
+			type: Profesor,
+			args: {},
+			resolve: (_,{}) =>
+				Profesordb.findOne({ _id: _._id_profesor })
+		},
+		materia: {
+			type: Materia,
+			args: {},
+			resolve: (_,{}) =>
+				Materiadb.findOne({ _id: _._id_materia })
+		},
+		horario: {
+			type: Horario,
+			args: {},
+			resolve: (_,{}) =>
+				Horariodb.findOne({ _id_asignatura: _._id })
+		},
   }
 })
 
@@ -165,7 +185,12 @@ const Evaluacion = new GraphQLObjectType({
 		contenido: { type: GraphQLString },
 		porcentaje: { type: GraphQLInt },
 		fecha: { type: GraphQLString },
-		_id_asignatura: { type: GraphQLID }
+		asignatura: {
+			type: Asignatura,
+			args: {},
+			resolve: (_,{}) =>
+				Asignaturadb.findOne({ _id: _._id_asignatura })
+		},
   }
 })
 
@@ -173,8 +198,18 @@ const Clase = new GraphQLObjectType({
   name: "Clase",
   fields: {
     _id: { type: GraphQLID },
-		_id_cursar: { type: GraphQLID },
-		_id_asignatura: { type: GraphQLID }
+		cursar: {
+			type: Cursar,
+			args: {},
+			resolve: (_,{}) =>
+				Cursardb.findOne({ _id: _._id_cursar })
+		},
+		asignatura: {
+			type: Asignatura,
+			args: {},
+			resolve: (_,{}) =>
+				Asignaturadb.findOne({ _id: _._id_asignatura })
+		}
   }
 })
 
@@ -183,8 +218,18 @@ const Nota = new GraphQLObjectType({
   fields: {
     _id: { type: GraphQLID },
 		calificacion: { type: GraphQLFloat },
-		_id_evaluacion: { type: GraphQLID },
-		_id_clase: { type: GraphQLID },
+		evaluacion: {
+			type: Evaluacion,
+			args: {},
+			resolve: (_,{}) =>
+				Evaluaciondb.findOne({ _id: _._id_evaluacion })
+		},
+		clase: {
+			type: Clase,
+			args: {},
+			resolve: (_,{}) =>
+				Clasedb.findOne({ _id: _._id_clase })
+		}
   }
 })
 
@@ -281,6 +326,83 @@ const Query = new GraphQLObjectType({
 			},
       resolve: (_,{_id_estudio}) => Cursardb.find({ _id_estudio })
 		},
+		profesor: {
+			description: 'profesor por cedula',
+			type: Profesor,
+      args: {
+				cedula: { type: new GraphQLNonNull(GraphQLString) },
+			},
+      resolve: (_,{cedula}) => Profesordb.findOne({ cedula })
+		},
+		asignatura_of_periodo: {
+			description: 'asignatura por periodo',
+			type: new GraphQLList(Asignatura),
+      args: {
+				_id_periodo: { type: new GraphQLNonNull(GraphQLID) },
+			},
+      resolve: (_,{_id_periodo}) => Asignaturadb.find({ _id_periodo })
+		},
+		asignatura_of_profesor: {
+			description: 'asignatura por profesor',
+			type: new GraphQLList(Asignatura),
+      args: {
+				_id_profesor: { type: new GraphQLNonNull(GraphQLID) },
+			},
+      resolve: (_,{_id_profesor}) => Asignaturadb.find({ _id_profesor })
+		},
+		asignatura_of_materia: {
+			description: 'asignatura por materia',
+			type: new GraphQLList(Asignatura),
+      args: {
+				_id_materia: { type: new GraphQLNonNull(GraphQLID) },
+			},
+      resolve: (_,{_id_materia}) => Asignaturadb.find({ _id_materia })
+		},
+		horario_of_asignatura: {
+			description: 'horario por asignatura',
+			type: new GraphQLList(Horario),
+      args: {
+				_id_asignatura: { type: new GraphQLNonNull(GraphQLID) },
+			},
+      resolve: (_,{_id_asignatura}) => Horariodb.find({ _id_asignatura })
+		},
+		evaluacion_of_asignatura: {
+			description: 'evaluacion por asignatura',
+			type: new GraphQLList(Evaluacion),
+      args: {
+				_id_asignatura: { type: new GraphQLNonNull(GraphQLID) },
+			},
+      resolve: (_,{_id_asignatura}) => Evaluaciondb.find({ _id_asignatura })
+		},
+		clase_of_cursar: {
+			description: 'clases por cursar',
+			type: new GraphQLList(Clase),
+      args: {
+				_id_cursar: { type: new GraphQLNonNull(GraphQLID) },
+			},
+      resolve: (_,{_id_cursar}) => Clasedb.find({ _id_cursar })
+		},
+		clase_of_asignatura: {
+			description: 'clases por asignaturas',
+			type: new GraphQLList(Clase),
+      args: {
+				_id_asignatura: { type: new GraphQLNonNull(GraphQLID) },
+			},
+      resolve: (_,{_id_asignatura}) => Clasedb.find({ _id_asignatura })
+		},
+		nota_of_clase: {
+			description: 'nota por clase',
+			type: new GraphQLList(Nota),
+      args: {
+				_id_clase: { type: new GraphQLNonNull(GraphQLID) },
+			},
+      resolve: (_,{_id_clase}) => Notadb.find({ _id_clase })
+		},
+		personal_all: {
+			type: new GraphQLList(Personal),
+			args: {},
+			resolve: (_,{}) => Personaldb.find({})
+		}
   }
 })
 
@@ -422,6 +544,137 @@ const Mutation = new GraphQLObjectType({
 					{ cedula, nombre, apellido, correo, clave },
 					{ upsert: true, new: true, safe: true, returnNewDocument: true }
 				)
+		},
+		remove_profesor: {
+			description: 'elimina profesor',
+			type: Profesor,
+			args: {
+				_id_profesor: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_profesor}) =>
+				Profesordb.findByIdAndRemove({ _id: _id_profesor })
+		},
+		asignatura: {
+			description: 'crea asignatura',
+			type: Asignatura,
+			args: {
+				_id_periodo: { type: new GraphQLNonNull(GraphQLID) },
+				_id_profesor: { type: new GraphQLNonNull(GraphQLID) },
+				_id_materia: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_periodo,_id_profesor,_id_materia}) =>
+				Asignaturadb.create({ _id_periodo, _id_profesor, _id_materia })
+		},
+		remove_asignatura: {
+			description: 'elimina asignatura',
+			type: Asignatura,
+			args: {
+				_id_asignatura: { type: new GraphQLNonNull(GraphQLID) },
+			},
+			resolve: (_,{_id_asignatura}) =>
+				Asignaturadb.findByIdAndRemove({ _id: _id_asignatura })
+		},
+		horario: {
+			type: Horario,
+			args: {
+				dia: { type: new GraphQLNonNull(GraphQLInt) },
+				desde: { type: new GraphQLNonNull(GraphQLString) },
+				hasta: { type: new GraphQLNonNull(GraphQLString) },
+				detalle: { type: new GraphQLNonNull(GraphQLString) },
+				_id_asignatura: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{dia,desde,hasta,detalle,_id_asignatura}) =>
+				Horariodb.create({ dia, desde, hasta, detalle, _id_asignatura })
+		},
+		remove_horario: {
+			type: Horario,
+			args: {
+				_id_horario: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_horario}) =>
+				Horariodb.findByIdAndRemove({ _id: _id_horario })
+		},
+		evaluacion: {
+			description: 'crear evaluacion',
+			type: Evaluacion,
+			args: {
+				contenido: { type: new GraphQLNonNull(GraphQLString) },
+				porcentaje: { type: new GraphQLNonNull(GraphQLInt) },
+				fecha: { type: new GraphQLNonNull(GraphQLString) },
+				_id_asignatura: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{contenido,porcentaje,fecha,_id_asignatura}) =>
+				Evaluaciondb.create({ contenido, porcentaje, fecha, _id_asignatura })
+		},
+		remove_evaluacion: {
+			type: Evaluacion,
+			args: {
+				_id_evaluacion: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_evaluacion}) =>
+				Evaluaciondb.findByIdAndRemove({ _id: _id_evaluacion })
+		},
+		clase: {
+			type: Clase,
+			args: {
+				_id_cursar: { type: new GraphQLNonNull(GraphQLID) },
+				_id_asignatura: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_cursar,_id_asignatura}) =>
+				Clasedb.create({ _id_cursar, _id_asignatura })
+		},
+		remove_clase: {
+			type: Clase,
+			args: {
+				_id_clase: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_clase}) =>
+				Clasedb.findByIdAndRemove({ _id: _id_clase })
+		},
+		nota: {
+			type: Nota,
+			args: {
+				calificacion: { type: new GraphQLNonNull(GraphQLFloat) },
+				_id_evaluacion: { type: new GraphQLNonNull(GraphQLID) },
+				_id_clase: { type: new GraphQLNonNull(GraphQLID) },
+			},
+			resolve: (_,{calificacion,_id_evaluacion,_id_clase}) =>
+				Notadb.create({ calificacion, _id_evaluacion, _id_clase })
+		},
+		remove_nota: {
+			type: Nota,
+			args: {
+				_id_nota: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_nota}) =>
+				Notadb.findByIdAndRemove({ _id: _id_nota })
+		},
+		personal: {
+			description: 'crear-editar personal',
+			type: Personal,
+			args: {
+				cedula: { type: new GraphQLNonNull(GraphQLString) },
+				nombre: { type: new GraphQLNonNull(GraphQLString) },
+				apellido: { type: new GraphQLNonNull(GraphQLString) },
+				correo: { type: new GraphQLNonNull(GraphQLString) },
+				grado: { type: new GraphQLNonNull(GraphQLInt) },
+				clave: { type: new GraphQLNonNull(GraphQLString) }
+			},
+			resolve: (_,{cedula,nombre,apellido,correo,grado,clave}) =>
+				Personaldb.update(
+					{ cedula },
+					{ cedula, nombre, apellido, correo, grado, clave },
+					{ upsert: true, new: true, safe: true, returnNewDocument: true }
+				)
+		},
+		remove_personal: {
+			description: 'elimina personal',
+			type: Personal,
+			args: {
+				_id_personal: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_personal}) =>
+				Personaldb.findByIdAndRemove({ _id: _id_personal })
 		},
 	}
 })

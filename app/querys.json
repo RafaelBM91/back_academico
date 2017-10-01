@@ -1,0 +1,506 @@
+mutation {
+  carrera (
+    codigo:"cs-is"
+    nombre:"Ingenieria de Computacion"
+  ) {
+    _id
+  }
+}
+
+query {
+  carrera_all {
+    _id
+    codigo
+    nombre
+  }
+}
+
+mutation {
+  materia (
+    codigo:"is-01"
+    nombre:"Matematica 0"
+  ) {
+    _id
+  }
+}
+
+query {
+  materia_all {
+    _id
+    codigo
+    nombre
+  }
+}
+
+mutation {
+  contenido (
+    _id_carrera:"59cfcc70949e7cb410a92d25"
+    _id_materia:"59cfccc8949e7cb410a92d39"
+  ) {
+    _id
+  }
+}
+
+query {
+  materia_of_carrera (
+    _id_carrera:"59cfcc70949e7cb410a92d25"
+  ) {
+    _id
+    materia {
+      _id
+      codigo
+      nombre
+    }
+  }
+  carrera_of_materia (
+    _id_materia:"59cfccc8949e7cb410a92d39"
+  ) {
+    _id
+    carrera {
+      _id
+      codigo
+      nombre
+    }
+  }
+}
+
+mutation {
+  alumno (
+    cedula:"19529584"
+    nombre:"Rafael Alberto"
+    apellido:"Briceño Montes"
+    correo:"rafael_ata1@hotmail.com"
+    clave:"12345"
+  ) {
+    _id
+  }
+}
+
+query {
+  alumno (
+    cedula:"19529584"
+  ) {
+    _id
+    cedula
+    nombre
+    apellido
+    correo
+    clave
+  }
+}
+
+mutation {
+  estudio (
+    estado:3
+    _id_carrera:"59cfcc70949e7cb410a92d25"
+    _id_alumno:"59cfce89949e7cb410a92da2"
+  ) {
+    _id
+  }
+  remove_estudio (
+    _id_estudio:"59cfcf6843046211f2fec910"
+  ) {
+    _id
+  }
+}
+
+query {
+  carrera_alumno_estado (
+    estado:3
+    _id_carrera:"59cfcc70949e7cb410a92d25"
+  ) {
+    _id
+    alumno {
+      _id
+      cedula
+      nombre
+      apellido
+    }
+  }
+}
+
+mutation {
+  periodo (
+    codigo:"2017-c"
+    desde:"2017-07-05"
+    hasta:"2017-12-02"
+    gracia:7
+  ) {
+    _id
+  }
+  remove_periodo (
+    _id_periodo:"59cfd0cd949e7cb410a92e2e"
+  ) {
+    _id
+  }
+}
+
+query {
+  periodo (
+    codigo:"2017-c"
+  ) {
+    _id
+    codigo
+    desde
+    hasta
+    gracia
+  }
+}
+
+mutation {
+  cursar (
+    _id_periodo:"59cfd19d949e7cb410a92e60"
+    _id_estudio:"59cfd04643046211f2fec911"
+  ) {
+    _id
+  }
+  remove_cursar (
+    _id_cursar:"59cfd1e743046211f2fec912"
+  ) {
+    _id
+  }
+}
+
+query {
+  alumnos_of_periodos (
+    _id_periodo:"59cfd19d949e7cb410a92e60"
+  ) {
+    _id
+    periodo {
+      _id
+      codigo
+    }
+    estudio {
+      _id
+      carrera {
+        _id
+        codigo
+        nombre
+      }
+      alumno {
+        _id
+        cedula
+        nombre
+        apellido
+      }
+    }
+  }
+  periodos_of_alumnos (
+    _id_estudio:"59cfd04643046211f2fec911"
+  ) {
+    _id
+    periodo {
+      _id
+      codigo
+    }
+    estudio {
+      _id
+      carrera {
+        _id
+        codigo
+        nombre
+      }
+      alumno {
+        _id
+        cedula
+        nombre
+        apellido
+      }
+    }
+  }
+}
+
+mutation {
+  profesor (
+    cedula:"19529584"
+    nombre:"Rafael Alberto"
+    apellido:"Briceño Montes"
+    correo:"rafael_ata1@hotmail.com"
+    clave:"12345"
+  ) {
+    _id
+  }
+  remove_profesor (
+    _id_profesor:"59cfd556949e7cb410a92f4e"
+  ) {
+    _id
+  }
+}
+
+query {
+  profesor (
+    cedula:"19529584"
+  ) {
+    _id
+    cedula
+    nombre
+    apellido
+  }
+}
+
+mutation {
+  asignatura (
+    _id_periodo:"59cfd19d949e7cb410a92e60"
+    _id_profesor:"59cfddde40cec0e723ccd7a4"
+    _id_materia:"59cfccc8949e7cb410a92d39"
+  ) {
+    _id
+  }
+  remove_asignatura (
+    _id_asignatura:"59cfe32669a628116721b7f0"
+  ) {
+    _id
+  }
+}
+
+query {
+  asignatura_of_periodo (
+    _id_periodo:"59cfd19d949e7cb410a92e60"
+  ) {
+    _id
+    periodo {
+      codigo
+    }
+    profesor {
+      cedula
+    }
+    materia {
+      codigo
+    }
+  }
+  asignatura_of_profesor (
+    _id_profesor:"59cfddde40cec0e723ccd7a4"
+  ) {
+    _id
+    periodo {
+      codigo
+    }
+    profesor {
+      cedula
+    }
+    materia {
+      codigo
+    }
+  }
+  asignatura_of_materia (
+    _id_materia:"59cfccc8949e7cb410a92d39"
+  ) {
+    _id
+    periodo {
+      codigo
+    }
+    profesor {
+      cedula
+    }
+    materia {
+      codigo
+    }
+  }
+}
+
+mutation {
+  horario (
+    dia:1
+    desde:"08:00"
+    hasta:"11:20"
+    detalle:"Aula E-12"
+    _id_asignatura:"59cfe45869a628116721b7f1"
+  ) {
+    _id
+  }
+  remove_horario (
+    _id_horario:"59cfe7cdc7ea6414916a8123"
+  ) {
+    _id
+  }
+}
+
+query {
+  horario_of_asignatura (
+    _id_asignatura:"59cfe45869a628116721b7f1"
+  ) {
+    _id
+    dia
+    desde
+    hasta
+    detalle
+  }
+}
+
+mutation {
+  evaluacion (
+    contenido:"funciones simples"
+    porcentaje:25
+    fecha:"2017-08-15"
+    _id_asignatura:"59cfe45869a628116721b7f1"
+  ) {
+    _id
+  }
+  remove_evaluacion (
+    _id_evaluacion:"59cfedb5f9675c177ba80352"
+  ) {
+    _id
+  }
+}
+
+query {
+  evaluacion_of_asignatura (
+    _id_asignatura:"59cfe45869a628116721b7f1"
+  ) {
+    _id
+    contenido
+    porcentaje
+    fecha
+    asignatura {
+      materia {
+        nombre
+      }
+      profesor {
+        nombre
+        apellido
+      }
+    }
+  }
+}
+
+mutation {
+  clase (
+    _id_cursar:"59cfd47043046211f2fec913"
+    _id_asignatura:"59cfe45869a628116721b7f1"
+  ) {
+    _id
+  }
+  remove_clase (
+    _id_clase:"59cff149ae522e193bd47634"
+  ) {
+    _id
+  }
+}
+
+query {
+  clase_of_cursar (
+    _id_cursar:"59cfd47043046211f2fec913"
+  ) {
+    _id
+    cursar {
+    	periodo {
+        codigo
+      }
+      estudio {
+        alumno {
+          nombre
+          apellido
+        }
+        carrera {
+          nombre
+        }
+      }
+    }
+    asignatura {
+      materia {
+        nombre
+      }
+      profesor {
+        nombre
+        apellido
+      }
+      horario {
+        dia
+        desde
+        hasta
+        detalle
+      }
+    }
+  }
+  clase_of_asignatura (
+    _id_asignatura:"59cfe45869a628116721b7f1"
+  ) {
+    _id
+    cursar {
+    	periodo {
+        codigo
+      }
+      estudio {
+        alumno {
+          nombre
+          apellido
+        }
+        carrera {
+          nombre
+        }
+      }
+    }
+    asignatura {
+      materia {
+        nombre
+      }
+      profesor {
+        nombre
+        apellido
+      }
+      horario {
+        dia
+        desde
+        hasta
+        detalle
+      }
+    }
+  }
+}
+
+mutation {
+  nota (
+    calificacion:13.5
+    _id_evaluacion:"59cfeeb1f9675c177ba80353"
+    _id_clase:"59cff507a3a0481c303a2527"
+  ) {
+    _id
+  }
+}
+
+query {
+  nota_of_clase (
+    _id_clase:"59cff507a3a0481c303a2527"
+  ) {
+    _id
+    calificacion
+    evaluacion {
+      asignatura {
+        profesor {
+          nombre
+          apellido
+        }
+      }
+    }
+  }
+}
+
+mutation {
+  personal (
+    cedula:"19529584"
+    nombre:"Rafael Alberto"
+    apellido:"Briceño Montes"
+    correo:"rafael_ata1@hotmail.com"
+    grado:1
+    clave:"1234"
+  ) {
+    _id
+  }
+  remove_personal (
+    _id_personal:"59cffbf840cec0e723ccdebf"
+  ) {
+    _id
+  }
+}
+
+query {
+  personal_all {
+    _id
+    cedula
+    nombre
+    apellido
+    correo
+    grado
+    clave
+  }
+}
