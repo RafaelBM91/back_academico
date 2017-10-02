@@ -14,3 +14,7 @@ yarn-error.log*
 
 academico.mwb
 academico.mwb.bak
+
+api/
+static/
+

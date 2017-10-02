@@ -1,19 +1,85 @@
+const http = require('http')
 const express = require('express')
+const path = require('path')
 const graphqlHTTP = require('express-graphql')
 const MyGraphQLSchema = require('./graphql-data')
+const graphql = require('graphql')
+const bodyParser = require('body-parser')
+const Session = require('express-session')
+const mongoDBStore = require('connect-mongodb-session')(Session)
+const uuid = require('uuid')
 
 const app = express()
+const Server = http.createServer(app)
+const io = require('socket.io')(Server)
 
-// app.use('/', graphqlHTTP({
-//   schema: MyGraphQLSchema,
-//   graphiql: true
-// }))
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use('/static', express.static( path.resolve('static') ))
 
-app.use('/session', (req, res) => {
-  // console.log(reg)
-  res.end('hola')
+const store = new mongoDBStore({
+  uri: 'mongodb://localhost:27017/test-graphql',
+  collection: 'session'
 })
 
-app.listen(4000, () => {
-	console.log('escucha puerto :4000','...start...')
+app.use(Session({
+  name: 'sistema',
+  secret: uuid(),
+  saveUninitialized: true,
+  resave: true,
+  store: store,
+  cookie: {
+    secure: false,
+    maxAge: 3600000
+  }
+}))
+
+app.use('/graphiql', graphqlHTTP({
+  schema: MyGraphQLSchema,
+  graphiql: true
+}))
+
+app.post('/login', (req, res) => {
+  const { grado, correo, clave} = req.body
+  console.log( req.body )
+  if (Number(grado) === 1 && correo === 'rafa' && clave === '123') {
+    req.session.open = { correo, grado }
+    res.json({ session: req.session.open, ok: true })
+  } else {
+    res.json({ ok: false })
+  }
+})
+
+app.post('/session', (req, res) => {
+  if (req.session.open) {
+    res.json({ session: req.session.open, ok: true })
+  } else {
+    res.json({ session: undefined, ok: false })
+  }
+})
+
+app.post('/close', (req, res) => {
+  req.session.open = null
+  res.json({ ok: true })
+})
+
+app.use('*', (req, res) => {
+  //res.end('<h1>Error 404</h1>')
+  res.sendFile( path.resolve('api/index.html') )
+})
+
+/*** SOCKET.IO ***/
+
+const dentro = io.of('/')
+
+io.on('connection', function (socket) {
+  socket.on('req', (data) => {
+    dentro.emit('res', data + ' zion baby')
+  })
+})
+
+/*** SOCKET.IO ***/
+
+Server.listen(4000, function () {
+  console.log('escucha puerto :4000','...start...')
 })
