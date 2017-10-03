@@ -1,0 +1,217 @@
+<html>
+  <head>
+    <title>graphql-test</title>
+  </head>
+  <body>
+
+    <div id="app">
+      <h1>{{test}}</h1>
+      <br />
+      {{ ($store.state.auth) ? $store.state.auth._id : 'null'}}
+      &nbsp;
+      <button type="button" v-on:click="click">Ok!</button>
+      &nbsp;&nbsp;
+      <button type="button" v-on:click="stsession">Status Session</button>
+      &nbsp;&nbsp;
+      <button type="button" v-on:click="close">Close Session</button>
+      <br /><br />
+      <h1 v-show="$store.state.loading">LOADING...</h1>
+      <router-link to="/">Index</router-link>
+      &nbsp;&nbsp;
+      <router-link to="/login">Login</router-link>
+      &nbsp;&nbsp;
+      <router-link to="/secure">Secure</router-link>
+      <br /><br />
+      <router-view></router-view>
+    </div> 
+
+
+    <script src="/static/vue.min.js"></script>
+    <script src="/static/vue-router.js"></script>
+    <script src="/static/vuex.js"></script>
+    <script src="/static/axios.min.js"></script>
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
+    <script> 
+
+     // var socket = io.connect()
+
+     var store = new Vuex.Store({
+        state: {
+          auth: undefined,
+          faild_auth: undefined,
+          loading: false
+        },
+        mutations: {
+          AUTH (state, payload) {
+            state.auth = payload.auth
+            state.faild_auth = payload.faild
+          },
+          REAUTH (state) {
+            axios.post('/statuSession', {}).then(resp => {
+              var auth = resp.data.auth
+              if (state.auth) {
+                if (state.auth._id !== auth._id) {
+                  state.auth = auth
+                }
+              } else {
+                state.auth = auth
+              }
+            })
+          },
+          CLOSEAUTH (state) {
+            axios.post('/closeSession', {}).then(resp => {
+              state.auth = undefined
+            })
+          },
+          LOADING (state, payload) {
+            state.loading = payload
+          }
+        },
+        getters: {
+          getAuth: state => () => state.auth,
+          getFaildAuth: state => () => state.faild_auth
+        }
+      })
+      
+      var Index = { template: '<h1>--Index--</h1>' }
+      var Login = {
+        template: `
+                    <div>
+                      <h1>Loginx</h1>
+                      <form action="#" method="post" name="login" v-on:submit.prevent="sendLogin">
+                        
+                        <input type="hidden" name="grado" v-model="grado" />
+                        <input type="email" name="correo" placeholder="Correo..." required v-model="correo" />
+                        <br /><br />
+                        <input type="password" name="clave" placeholder="Contraseña" required v-model="clave" />
+                        <br /><br />
+                        <button type="submit">Entrar</button>
+                      </form>
+                    </div>
+                  `,
+        data () {
+          return {
+            grado: '4',
+            correo: 'rafael_ata1@hotmail.com',
+            clave: '19529584'
+          }
+        },
+        methods: {
+          sendLogin (event) {
+            axios.post('/login', {
+              grado: this.grado,
+              correo: this.correo,
+              clave: this.clave
+            }).then(resp => {
+              store.commit('AUTH', resp.data)
+            })
+            return false
+          }
+        }
+      }
+      var Secure = { template: '<h1>--secure--</h1>' }
+      
+      var routes = [
+        { path: '/',
+          component: Index,
+          name: 'index',
+          meta: { requiresLogin: true }
+        },
+        { path: '/login',
+          component: Login,
+          name: 'login',
+          meta: { requiresLogin: false }
+        },
+        { path: '/secure',
+          component: Secure,
+          name: 'secure',
+          meta: { requiresLogin: true }
+        }
+      ]
+      
+      var router = new VueRouter({
+        routes: routes
+      })
+      
+      router.beforeEach((to, from, next) => {
+        var auth = store.state.auth
+
+        store.watch(
+          store.getters.getAuth, auth => {
+            if (auth) {
+              next({ path: '/' })
+            } else {
+              next({ path: '/login' })
+            }
+          })
+
+        switch(to.name) {
+          case 'index':
+            next()
+          break
+          case 'login':
+            if (!auth) {
+              next()
+            } else {
+              next({ path: '/' })
+            }
+          break
+          case 'secure':
+            if (auth) {
+              next()
+            } else {
+              next({ path: '/login' })
+            }
+          break
+          default:
+            next({ path: '/' })
+        }
+        // console.log( from )
+        // store.commit('LOADING', true)
+        //var login = to.matched.some(record => record.meta.requiresLogin) 
+      })
+
+      
+
+      var vm = new Vue({
+        el: '#app',
+        router,
+        store,
+        data () {
+          return {
+            test: 'Sistema',
+            texto: ''
+          }
+        },
+        methods: {
+          click () {
+            this.$store.commit('REAUTH')
+          },
+          stsession () {
+            axios.post('/statuSession', {}).then(resp => console.log( resp.data ) )
+          },
+          close () {
+            this.$store.commit('CLOSEAUTH')
+          }
+        },
+        created () {
+
+          // inicializa session post-reload
+          this.$store.commit('REAUTH')
+
+          this.$store.watch(
+            this.$store.getters.getAuth, auth => {
+              // console.log('watched: ', auth)
+              this.$store.commit('REAUTH')
+          })
+
+          this.$store.watch(
+            this.$store.getters.getFaildAuth, faild_auth => {
+              console.log('watched: ', faild_auth)
+          })
+        }
+      }) 
+
+    </script>
+  </body>
+</html>

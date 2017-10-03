@@ -285,6 +285,15 @@ const Query = new GraphQLObjectType({
 			},
       resolve: (_,{cedula}) => Alumnodb.findOne({ cedula })
 		},
+    alumno_auth: {
+			description: 'alumno por correo y clave',
+			type: Alumno,
+      args: {
+				correo: { type: new GraphQLNonNull(GraphQLString) },
+        clave: { type: new  GraphQLNonNull(GraphQLString) }
+			},
+      resolve: (_,{correo,clave}) => Alumnodb.findOne({ correo, clave })
+		},
 		carrera_alumno_estado: {
 			description: 'alumnos en carrera por _id carrera y estado de estudio',
 			type: new GraphQLList(Estudio),
