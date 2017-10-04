@@ -1,6 +1,13 @@
 <html>
   <head>
     <title>graphql-test</title>
+    <style>
+      textarea {
+        resize: none;
+        width: 400px;
+        height: 200px;
+      }
+    </style>
   </head>
   <body>
 
@@ -9,7 +16,7 @@
       <br />
       {{ ($store.state.auth) ? $store.state.auth._id : 'null'}}
       &nbsp;
-      <button type="button" v-on:click="click">Ok!</button>
+      <!-- <button type="button" v-on:click="click">Ok!</button> -->
       &nbsp;&nbsp;
       <button type="button" v-on:click="stsession">Status Session</button>
       &nbsp;&nbsp;
@@ -23,6 +30,18 @@
       <router-link to="/secure">Secure</router-link>
       <br /><br />
       <router-view></router-view>
+      <br /><br />
+      <button type="button" v-on:click="click">Ok!</button>
+      <br /><br />
+      <textarea v-model="query"></textarea>
+      &nbsp;&nbsp;
+      <textarea v-model="resp"></textarea>
+      <br /><br />
+      <form action="/avatar" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/x-png" />
+        <br /><br />
+        <button type="submit">Enviar</button>
+      </form>
     </div> 
 
 
@@ -103,6 +122,7 @@
               correo: this.correo,
               clave: this.clave
             }).then(resp => {
+              console.log( resp )
               store.commit('AUTH', resp.data)
             })
             return false
@@ -180,21 +200,40 @@
         data () {
           return {
             test: 'Sistema',
-            texto: ''
+            texto: '',
+            query: '',
+            resp: ''
           }
         },
         methods: {
           click () {
-            this.$store.commit('REAUTH')
+            axios.post('/query', { query: this.query })
+              .then(resp => {
+                console.log( resp )
+                this.resp = JSON.stringify(resp.data.data, ' ', 2)
+              })
           },
           stsession () {
             axios.post('/statuSession', {}).then(resp => console.log( resp.data ) )
           },
           close () {
             this.$store.commit('CLOSEAUTH')
+          },
+          sendImage () {
+            var formData = new FormData()
+            var imagefile = document.querySelector('#file')
+            formData.append("image", imagefile.files[0])
+            console.log( imagefile.files[0] )
+            console.log( formData )
+            axios.post('/avatar', { formData }, { header: { 'Content-Type': 'multipart/form-data' } })
+              .then(resp => {
+                // console.log( resp )
+              })
           }
         },
         created () {
+
+          // console.log( 'hola' )
 
           // inicializa session post-reload
           this.$store.commit('REAUTH')
@@ -205,10 +244,10 @@
               this.$store.commit('REAUTH')
           })
 
-          this.$store.watch(
+          /*this.$store.watch(
             this.$store.getters.getFaildAuth, faild_auth => {
               console.log('watched: ', faild_auth)
-          })
+          })*/
         }
       }) 
 

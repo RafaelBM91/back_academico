@@ -25,7 +25,8 @@ const Horariodb = mongoose.model('horario')
 const Evaluaciondb = mongoose.model('evaluacion')
 const Clasedb = mongoose.model('clase')
 const Notadb = mongoose.model('nota')
-const Usuariodb = mongoose.model('usuario')
+const Coordinadordb = mongoose.model('coordinador')
+const Administradordb = mongoose.model('administrador')
 
 const Carrera = new GraphQLObjectType({
   name: "Carrera",
@@ -67,11 +68,14 @@ const Alumno = new GraphQLObjectType({
   fields: {
     _id: { type: GraphQLID },
     cedula: { type: GraphQLString },
-		nombre: { type: GraphQLString },
+    correo: { type: GraphQLString },
+    nombre: { type: GraphQLString },
 		apellido: { type: GraphQLString },
+    sexo: { type: GraphQLString },
 		direccion: { type: GraphQLString },
 		telefono: { type: GraphQLString },
-		correo: { type: GraphQLString }
+    image: { type: GraphQLString },
+		clave: { type: GraphQLString }
   }
 })
 
@@ -130,11 +134,14 @@ const Profesor = new GraphQLObjectType({
   fields: {
     _id: { type: GraphQLID },
     cedula: { type: GraphQLString },
-		nombre: { type: GraphQLString },
+    correo: { type: GraphQLString },
+    nombre: { type: GraphQLString },
 		apellido: { type: GraphQLString },
+    sexo: { type: GraphQLString },
 		direccion: { type: GraphQLString },
 		telefono: { type: GraphQLString },
-		correo: { type: GraphQLString }
+    image: { type: GraphQLString },
+		clave: { type: GraphQLString }
   }
 })
 
@@ -235,15 +242,35 @@ const Nota = new GraphQLObjectType({
   }
 })
 
-const Usuario = new GraphQLObjectType({
-  name: "Usuario",
+const Coordinador = new GraphQLObjectType({
+  name: "Coordinador",
   fields: {
     _id: { type: GraphQLID },
     cedula: { type: GraphQLString },
-		nombres: { type: GraphQLString },
-		grado: { type: GraphQLInt },
-		image: { type: GraphQLInt },
-		clave: { type: GraphQLString }
+    correo: { type: GraphQLString },
+    nombre: { type: GraphQLString },
+		apellido: { type: GraphQLString },
+    sexo: { type: GraphQLString },
+		direccion: { type: GraphQLString },
+		telefono: { type: GraphQLString },
+    image: { type: GraphQLString },
+		clave: { type: GraphQLString } 
+  }
+})
+
+const Administrador = new GraphQLObjectType({
+  name: "Administrador",
+  fields: {
+    _id: { type: GraphQLID },
+    cedula: { type: GraphQLString },
+    correo: { type: GraphQLString },
+    nombre: { type: GraphQLString },
+		apellido: { type: GraphQLString },
+    sexo: { type: GraphQLString },
+		direccion: { type: GraphQLString },
+		telefono: { type: GraphQLString },
+    image: { type: GraphQLString },
+		clave: { type: GraphQLString } 
   }
 })
 
@@ -287,7 +314,7 @@ const Query = new GraphQLObjectType({
       resolve: (_,{cedula}) => Alumnodb.findOne({ cedula })
 		},
     alumno_auth: {
-			description: 'alumno por correo y clave',
+			description: 'alumno autenticacion por correo y clave',
 			type: Alumno,
       args: {
 				correo: { type: new GraphQLNonNull(GraphQLString) },
@@ -302,7 +329,7 @@ const Query = new GraphQLObjectType({
 				estado: { type: new GraphQLNonNull(GraphQLInt) },
 				_id_carrera: { type: new GraphQLNonNull(GraphQLID) }
 			},
-      resolve: (_,{_id_carrera}) => Estudiodb.find({ _id_carrera })
+      resolve: (_,{estado,_id_carrera}) => Estudiodb.find({ estado, _id_carrera })
 		},
 		alumno_carrera: {
 			description: 'carreras por alumno _id',
@@ -343,6 +370,15 @@ const Query = new GraphQLObjectType({
 				cedula: { type: new GraphQLNonNull(GraphQLString) },
 			},
       resolve: (_,{cedula}) => Profesordb.findOne({ cedula })
+		},
+    profesor_auth: {
+			description: 'profesor autenticacion por correo y clave',
+			type: Profesor,
+      args: {
+				correo: { type: new GraphQLNonNull(GraphQLString) },
+        clave: { type: new GraphQLNonNull(GraphQLString) }
+			},
+      resolve: (_,{correo,clave}) => Profesordb.findOne({ correo, clave })
 		},
 		asignatura_of_periodo: {
 			description: 'asignatura por periodo',
@@ -408,15 +444,39 @@ const Query = new GraphQLObjectType({
 			},
       resolve: (_,{_id_clase}) => Notadb.find({ _id_clase })
 		},
-		usuario: {
-			description: 'usuario por grado, correo y clave',
-			type: new GraphQLList(Usuario),
+    coordinador: {
+			description: 'coordinador por cedula',
+			type: Coordinador,
 			args: {
-				grado: { type: new GraphQLNonNull(GraphQLInt) },
+				cedula: { type: new GraphQLNonNull(GraphQLString) }
+			},
+			resolve: (_,{cedula}) => Coordinadordb.findOne({ cedula })
+		},
+		coordinador_auth: {
+			description: 'coordinador autenticacion por correo y clave',
+			type: Coordinador,
+			args: {
 				correo: { type: new GraphQLNonNull(GraphQLString) },
 				clave: { type: new GraphQLNonNull(GraphQLString) }
 			},
-			resolve: (_,{grado,correo,clave}) => Usuariodb.find({ grado, correo, clave })
+			resolve: (_,{correo,clave}) => Coordinadordb.findOne({ correo, clave })
+		},
+    administrador: {
+			description: 'administrador por cedula',
+			type: Administrador,
+			args: {
+				cedula: { type: new GraphQLNonNull(GraphQLString) }
+			},
+			resolve: (_,{cedula}) => Administradordb.findOne({ cedula })
+		},
+    administrador_auth: {
+			description: 'coordinador autenticacion por correo y clave',
+			type: Administrador,
+			args: {
+				correo: { type: new GraphQLNonNull(GraphQLString) },
+				clave: { type: new GraphQLNonNull(GraphQLString) }
+			},
+			resolve: (_,{correo,clave}) => Administradordb.findOne({ correo, clave })
 		}
   }
 })
@@ -467,18 +527,42 @@ const Mutation = new GraphQLObjectType({
 			type: Alumno,
 			args: {
 				cedula: { type: new GraphQLNonNull(GraphQLString) },
+        correo: { type: new GraphQLNonNull(GraphQLString) },
 				nombre: { type: new GraphQLNonNull(GraphQLString) },
 				apellido: { type: new GraphQLNonNull(GraphQLString) },
+        sexo: { type: new GraphQLNonNull(GraphQLString) },
 				direccion: { type: new GraphQLNonNull(GraphQLString) },
 				telefono: { type: new GraphQLNonNull(GraphQLString) },
-				correo: { type: new GraphQLNonNull(GraphQLString) }
+				clave: { type: new GraphQLNonNull(GraphQLString) }
 			},
-			resolve: (_,{cedula,nombre,apellido,direccion,telefono,correo}) =>
+			resolve: (_,{cedula,correo,nombre,apellido,sexo,direccion,telefono,clave}) =>
 				Alumnodb.update(
 					{ cedula },
-					{ cedula, nombre, apellido, direccion, telefono, correo },
+					{ cedula, correo, nombre, apellido, sexo, direccion, telefono, clave },
 					{ upsert: true, new: true, safe: true, returnNewDocument: true }
 				)
+		},
+    alumno_image: {
+      type: Alumno,
+      args: {
+        _id_alumno: { type: new GraphQLNonNull(GraphQLID) },
+        image: { type: new GraphQLNonNull(GraphQLString) }
+      },
+      resolve: (_,{_id_alumno,image}) =>
+        Alumnodb.update(
+          { _id: _id_alumno },
+          { image },
+          { upsert: true, new: true, safe: true, returnNewDocument: true }
+        )
+    },
+    remove_alumno: {
+			description: 'elimina alumno',
+			type: Alumno,
+			args: {
+				_id_alumno: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_alumno}) =>
+				Alumnodb.findByIdAndRemove({ _id: _id_alumno })
 		},
 		estudio: {
 			description: 'crear relacion alumno - carrera',
@@ -549,19 +633,34 @@ const Mutation = new GraphQLObjectType({
 			type: Profesor,
 			args: {
 				cedula: { type: new GraphQLNonNull(GraphQLString) },
+        correo: { type: new GraphQLNonNull(GraphQLString) },
 				nombre: { type: new GraphQLNonNull(GraphQLString) },
 				apellido: { type: new GraphQLNonNull(GraphQLString) },
+        sexo: { type: new GraphQLNonNull(GraphQLString) },
 				direccion: { type: new GraphQLNonNull(GraphQLString) },
 				telefono: { type: new GraphQLNonNull(GraphQLString) },
-				correo: { type: new GraphQLNonNull(GraphQLString) }
+				clave: { type: new GraphQLNonNull(GraphQLString) }
 			},
-			resolve: (_,{cedula,nombre,apellido,direccion,telefono,correo}) =>
+			resolve: (_,{cedula,correo,nombre,apellido,sexo,direccion,telefono,clave}) =>
 				Profesordb.update(
 					{ cedula },
-					{ cedula, nombre, apellido, direccion, telefono, correo },
+					{ cedula, correo, nombre, apellido, sexo, direccion, telefono, clave },
 					{ upsert: true, new: true, safe: true, returnNewDocument: true }
 				)
 		},
+    profesor_image: {
+      type: Profesor,
+      args: {
+        _id_profesor: { type: new GraphQLNonNull(GraphQLID) },
+        image: { type: new GraphQLNonNull(GraphQLString) }
+      },
+      resolve: (_,{_id_profesor,image}) =>
+        Profesordb.update(
+          { _id: _id_profesor },
+          { image },
+          { upsert: true, new: true, safe: true, returnNewDocument: true }
+        )
+    },
 		remove_profesor: {
 			description: 'elimina profesor',
 			type: Profesor,
@@ -666,30 +765,89 @@ const Mutation = new GraphQLObjectType({
 			resolve: (_,{_id_nota}) =>
 				Notadb.findByIdAndRemove({ _id: _id_nota })
 		},
-		usuario: {
-			description: 'crear-editar usuario',
-			type: Usuario,
+		coordinador: {
+			description: 'crear-editar coordinador',
+			type: Coordinador,
 			args: {
 				cedula: { type: new GraphQLNonNull(GraphQLString) },
-				nombres: { type: new GraphQLNonNull(GraphQLString) },
-				grado: { type: new GraphQLNonNull(GraphQLInt) },
+        correo: { type: new GraphQLNonNull(GraphQLString) },
+				nombre: { type: new GraphQLNonNull(GraphQLString) },
+				apellido: { type: new GraphQLNonNull(GraphQLString) },
+        sexo: { type: new GraphQLNonNull(GraphQLString) },
+				direccion: { type: new GraphQLNonNull(GraphQLString) },
+				telefono: { type: new GraphQLNonNull(GraphQLString) },
 				clave: { type: new GraphQLNonNull(GraphQLString) }
 			},
-			resolve: (_,{cedula,nombres,grado,clave}) =>
-				Usuariodb.update(
+			resolve: (_,{cedula,correo,nombre,apellido,sexo,direccion,telefono,clave}) =>
+				Coordinadordb.update(
 					{ cedula },
-					{ cedula, nombres, grado, clave },
+					{ cedula, correo, nombre, apellido, sexo, direccion, telefono, clave },
 					{ upsert: true, new: true, safe: true, returnNewDocument: true }
 				)
 		},
-		remove_usuario: {
-			description: 'elimina usuario',
-			type: Usuario,
+    coordinador_image: {
+      type: Coordinador,
+      args: {
+        _id_coordinador: { type: new GraphQLNonNull(GraphQLID) },
+        image: { type: new GraphQLNonNull(GraphQLString) }
+      },
+      resolve: (_,{_id_coordinador,image}) =>
+        Coordinadordb.update(
+          { _id: _id_coordinador },
+          { image },
+          { upsert: true, new: true, safe: true, returnNewDocument: true }
+        )
+    },
+		remove_coordinador: {
+			description: 'elimina coordinador',
+			type: Coordinador,
 			args: {
-				_id_usuario: { type: new GraphQLNonNull(GraphQLID) }
+				_id_coordinador: { type: new GraphQLNonNull(GraphQLID) }
 			},
-			resolve: (_,{_id_usuario}) =>
-				Usuariodb.findByIdAndRemove({ _id: _id_usuario })
+			resolve: (_,{_id_coordinador}) =>
+				Coordinadordb.findByIdAndRemove({ _id: _id_coordinador })
+		},
+    administrador: {
+			description: 'crear-editar administrador',
+			type: Administrador,
+			args: {
+				cedula: { type: new GraphQLNonNull(GraphQLString) },
+        correo: { type: new GraphQLNonNull(GraphQLString) },
+				nombre: { type: new GraphQLNonNull(GraphQLString) },
+				apellido: { type: new GraphQLNonNull(GraphQLString) },
+        sexo: { type: new GraphQLNonNull(GraphQLString) },
+				direccion: { type: new GraphQLNonNull(GraphQLString) },
+				telefono: { type: new GraphQLNonNull(GraphQLString) },
+				clave: { type: new GraphQLNonNull(GraphQLString) }
+			},
+			resolve: (_,{cedula,correo,nombre,apellido,sexo,direccion,telefono,clave}) =>
+				Administradordb.update(
+					{ cedula },
+					{ cedula, correo, nombre, apellido, sexo, direccion, telefono, clave },
+					{ upsert: true, new: true, safe: true, returnNewDocument: true }
+				)
+		},
+    administrador_image: {
+      type: Administrador,
+      args: {
+        _id_administrador: { type: new GraphQLNonNull(GraphQLID) },
+        image: { type: new GraphQLNonNull(GraphQLString) }
+      },
+      resolve: (_,{_id_administrador,image}) =>
+        Administradordb.update(
+          { _id: _id_administrador },
+          { image },
+          { upsert: true, new: true, safe: true, returnNewDocument: true }
+        )
+    },
+		remove_administrador: {
+			description: 'elimina administrador',
+			type: Administrador,
+			args: {
+				_id_administrador: { type: new GraphQLNonNull(GraphQLID) }
+			},
+			resolve: (_,{_id_administrador}) =>
+				Administradordb.findByIdAndRemove({ _id: _id_administrador })
 		},
 	}
 })

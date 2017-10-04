@@ -8,11 +8,22 @@ const bodyParser = require('body-parser')
 const Session = require('express-session')
 const mongoDBStore = require('connect-mongodb-session')(Session)
 const uuid = require('uuid')
-const mongoose = require('./mongodb')
+const multer = require('multer')
 
 const app = express()
 const Server = http.createServer(app)
-//const io = require('socket.io')(Server)
+
+const FileStore = multer.diskStorage({
+  destination: function(req, file, callback) {
+    console.log( file.fieldname )
+    callback(null, "../avatars")
+  },
+  filename: function(req, file, callback) {
+    callback(null, file.fieldname + "_" + Date.now() + "_" + file.originalname)
+  }
+})
+
+const FileUpload = multer({ storage: FileStore }).single('avatar')
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -41,40 +52,47 @@ app.use('/graphiql', graphqlHTTP({
 }))
 
 app.post('/login', (req, res) => {
-  const { grado, correo, clave} = req.body
+  let { grado, correo, clave} = req.body
+  
+  grado = Number( grado) 
+  
+  const tgrado =
+    (grado === 1) ? 'administrador_auth' :
+    (grado === 2) ? 'coordinador_auth' :
+    (grado === 3) ? 'profesor_auth' :
+    (grado === 4) ? 'alumno_auth' : null
+
+  if (!tgrado) {
+    return res.json({ faild: true })
+  } 
 
   Query(`
       query {
-        alumno_auth (
+        ${tgrado} (
           correo:"${correo}"
           clave:"${clave}"
         ) {
           _id
           cedula
+          correo
           nombre
           apellido
-          correo
+          sexo
+          direccion
+          telefono
+          image
         }
       } 
   `).then(resp => {
     const auth = resp.data.alumno_auth
     if (auth) {
-      // test para grado
-      auth.grado = 4
+      auth.grado = grado
       req.session.auth = auth
       res.json({ auth })
     } else {
       res.json({ faild: true })
     }
   })
-
-  /*if (Number(grado) === 1 && correo === 'rafa' && clave === '123') {
-    req.session.open = { correo, grado }
-    res.json({ session: req.session.open, ok: true })
-  } else {
-    res.json({ ok: false })
-  }*/
-  // res.json({ ok: true })
 })
 
 app.post('/statuSession', (req, res) => {
@@ -86,33 +104,36 @@ app.post('/closeSession', (req, res) => {
   res.json({ auth: undefined })
 })
 
+
+/*** QUERY FRONT TO GRAPHQL ***/
+
+app.post('/query', (req, res) => {
+  if (req.session.auth) {
+    const { query } = req.body
+    Query(query).then(resp => {
+      const { data } = resp
+      res.json({ data })
+    })
+  } else {
+    res.json({ faild: true })
+  }
+})
+
+/*** QUERY FRONT TO GRAPHQL ***/
+
+app.post('/avatar', (req, res) => {
+  FileUpload(req, res, function (err) {
+    if (err) {
+      return res.json({ faild: true })
+    }
+    return res.json({ faild: false })
+  })
+})
+
 app.use('*', (req, res) => {
   //res.end('<h1>Error 404</h1>')
   res.sendFile( path.resolve('api/index.html') )
 })
-
-/*** SOCKET.IO ***/
-
-/*const dentro = io.of('/')
-
-io.on('connection', function (socket) {
-  socket.on('req', (data) => {
-    console.log( data )
-    dentro.emit('res', data + ' zion baby')
-  })
-  socket.on('reauth', (data) => {
-    const SessionSchema = new mongoose.Schema({}, { collection: 'session' })
-    const SessionDB = mongoose.model('session', SessionSchema)
-    // console.log( data )
-    // console.log( SessionDB )
-    SessionDB.find({ auth: data }, (err, data) => {
-      console.log( data )
-    })
-  })
-  console.log( socket.request.headers )
-})*/
-
-/*** SOCKET.IO ***/
 
 /*** QUERY-GRAPHQL ***/
 

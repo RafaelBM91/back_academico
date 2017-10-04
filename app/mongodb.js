@@ -42,11 +42,14 @@ const ContenidoSchema = new mongoose.Schema({
 
 const AlumnoSchema = new mongoose.Schema({
   cedula: { type: String, unique: true },
+  correo: { type: String, unique: true },
 	nombre: { type: String },
 	apellido: { type: String },
+  sexo: { type: String },
   direccion: { type: String },
   telefono: { type: String },
-	correo: { type: String, unique: true }
+  image: { type: String, default: 'default.png' },
+	clave: { type: String }
 },{
   timestamps: true
 })
@@ -77,11 +80,14 @@ const CursarSchema = new mongoose.Schema({
 
 const ProfesorSchema = new mongoose.Schema({
   cedula: { type: String, unique: true },
+  correo: { type: String, unique: true },
 	nombre: { type: String },
-  apellido: { type: String },
+	apellido: { type: String },
+  sexo: { type: String },
   direccion: { type: String },
   telefono: { type: String },
-	correo: { type: String, unique: true }
+  image: { type: String, default: 'default.png' },
+	clave: { type: String }
 },{
   timestamps: true
 })
@@ -128,12 +134,30 @@ const NotaSchema = new mongoose.Schema({
   timestamps: true
 })
 
-const UsuarioSchema = new mongoose.Schema({
+const CoordinadorSchema = new mongoose.Schema({
   cedula: { type: String, unique: true },
-	nombres: { type: String },
-  grado: { type: Number },
+  correo: { type: String, unique: true },
+	nombre: { type: String },
+	apellido: { type: String },
+  sexo: { type: String },
+  direccion: { type: String },
+  telefono: { type: String },
   image: { type: String, default: 'default.png' },
-  clave: { type: String }
+	clave: { type: String }
+},{
+  timestamps: true
+})
+
+const AdministradorSchema = new mongoose.Schema({
+  cedula: { type: String, unique: true },
+  correo: { type: String, unique: true },
+	nombre: { type: String },
+	apellido: { type: String },
+  sexo: { type: String },
+  direccion: { type: String },
+  telefono: { type: String },
+  image: { type: String, default: 'default.png' },
+	clave: { type: String }
 },{
   timestamps: true
 })
@@ -151,6 +175,8 @@ mongoose.model('horario', HorarioSchema)
 mongoose.model('evaluacion', EvaluacionSchema)
 mongoose.model('clase', ClaseSchema)
 mongoose.model('nota', NotaSchema)
-mongoose.model('usuario', UsuarioSchema)
+mongoose.model('coordinador', CoordinadorSchema)
+mongoose.model('administrador', AdministradorSchema)
 
 module.exports = mongoose
+
