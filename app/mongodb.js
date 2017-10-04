@@ -44,8 +44,9 @@ const AlumnoSchema = new mongoose.Schema({
   cedula: { type: String, unique: true },
 	nombre: { type: String },
 	apellido: { type: String },
-	correo: { type: String, unique: true },
-  clave: { type: String }
+  direccion: { type: String },
+  telefono: { type: String },
+	correo: { type: String, unique: true }
 },{
   timestamps: true
 })
@@ -77,9 +78,10 @@ const CursarSchema = new mongoose.Schema({
 const ProfesorSchema = new mongoose.Schema({
   cedula: { type: String, unique: true },
 	nombre: { type: String },
-	apellido: { type: String },
-	correo: { type: String, unique: true },
-  clave: { type: String }
+  apellido: { type: String },
+  direccion: { type: String },
+  telefono: { type: String },
+	correo: { type: String, unique: true }
 },{
   timestamps: true
 })
@@ -126,12 +128,11 @@ const NotaSchema = new mongoose.Schema({
   timestamps: true
 })
 
-const PersonalSchema = new mongoose.Schema({
+const UsuarioSchema = new mongoose.Schema({
   cedula: { type: String, unique: true },
-	nombre: { type: String },
-	apellido: { type: String },
-	correo: { type: String, unique: true },
+	nombres: { type: String },
   grado: { type: Number },
+  image: { type: String, default: 'default.png' },
   clave: { type: String }
 },{
   timestamps: true
@@ -150,6 +151,6 @@ mongoose.model('horario', HorarioSchema)
 mongoose.model('evaluacion', EvaluacionSchema)
 mongoose.model('clase', ClaseSchema)
 mongoose.model('nota', NotaSchema)
-mongoose.model('personal', PersonalSchema)
+mongoose.model('usuario', UsuarioSchema)
 
 module.exports = mongoose

@@ -59,6 +59,8 @@ app.post('/login', (req, res) => {
   `).then(resp => {
     const auth = resp.data.alumno_auth
     if (auth) {
+      // test para grado
+      auth.grado = 4
       req.session.auth = auth
       res.json({ auth })
     } else {

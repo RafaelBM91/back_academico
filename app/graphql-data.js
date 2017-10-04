@@ -25,7 +25,7 @@ const Horariodb = mongoose.model('horario')
 const Evaluaciondb = mongoose.model('evaluacion')
 const Clasedb = mongoose.model('clase')
 const Notadb = mongoose.model('nota')
-const Personaldb = mongoose.model('personal')
+const Usuariodb = mongoose.model('usuario')
 
 const Carrera = new GraphQLObjectType({
   name: "Carrera",
@@ -69,8 +69,9 @@ const Alumno = new GraphQLObjectType({
     cedula: { type: GraphQLString },
 		nombre: { type: GraphQLString },
 		apellido: { type: GraphQLString },
-		correo: { type: GraphQLString },
-		clave: { type: GraphQLString }
+		direccion: { type: GraphQLString },
+		telefono: { type: GraphQLString },
+		correo: { type: GraphQLString }
   }
 })
 
@@ -131,8 +132,9 @@ const Profesor = new GraphQLObjectType({
     cedula: { type: GraphQLString },
 		nombre: { type: GraphQLString },
 		apellido: { type: GraphQLString },
-		correo: { type: GraphQLString },
-		clave: { type: GraphQLString }
+		direccion: { type: GraphQLString },
+		telefono: { type: GraphQLString },
+		correo: { type: GraphQLString }
   }
 })
 
@@ -233,15 +235,14 @@ const Nota = new GraphQLObjectType({
   }
 })
 
-const Personal = new GraphQLObjectType({
-  name: "Personal",
+const Usuario = new GraphQLObjectType({
+  name: "Usuario",
   fields: {
     _id: { type: GraphQLID },
     cedula: { type: GraphQLString },
-		nombre: { type: GraphQLString },
-		apellido: { type: GraphQLString },
-		correo: { type: GraphQLString },
+		nombres: { type: GraphQLString },
 		grado: { type: GraphQLInt },
+		image: { type: GraphQLInt },
 		clave: { type: GraphQLString }
   }
 })
@@ -407,10 +408,15 @@ const Query = new GraphQLObjectType({
 			},
       resolve: (_,{_id_clase}) => Notadb.find({ _id_clase })
 		},
-		personal_all: {
-			type: new GraphQLList(Personal),
-			args: {},
-			resolve: (_,{}) => Personaldb.find({})
+		usuario: {
+			description: 'usuario por grado, correo y clave',
+			type: new GraphQLList(Usuario),
+			args: {
+				grado: { type: new GraphQLNonNull(GraphQLInt) },
+				correo: { type: new GraphQLNonNull(GraphQLString) },
+				clave: { type: new GraphQLNonNull(GraphQLString) }
+			},
+			resolve: (_,{grado,correo,clave}) => Usuariodb.find({ grado, correo, clave })
 		}
   }
 })
@@ -463,13 +469,14 @@ const Mutation = new GraphQLObjectType({
 				cedula: { type: new GraphQLNonNull(GraphQLString) },
 				nombre: { type: new GraphQLNonNull(GraphQLString) },
 				apellido: { type: new GraphQLNonNull(GraphQLString) },
-				correo: { type: new GraphQLNonNull(GraphQLString) },
-				clave: { type: new GraphQLNonNull(GraphQLString) }
+				direccion: { type: new GraphQLNonNull(GraphQLString) },
+				telefono: { type: new GraphQLNonNull(GraphQLString) },
+				correo: { type: new GraphQLNonNull(GraphQLString) }
 			},
-			resolve: (_,{cedula,nombre,apellido,correo,clave}) =>
+			resolve: (_,{cedula,nombre,apellido,direccion,telefono,correo}) =>
 				Alumnodb.update(
 					{ cedula },
-					{ cedula, nombre, apellido, correo, clave },
+					{ cedula, nombre, apellido, direccion, telefono, correo },
 					{ upsert: true, new: true, safe: true, returnNewDocument: true }
 				)
 		},
@@ -544,13 +551,14 @@ const Mutation = new GraphQLObjectType({
 				cedula: { type: new GraphQLNonNull(GraphQLString) },
 				nombre: { type: new GraphQLNonNull(GraphQLString) },
 				apellido: { type: new GraphQLNonNull(GraphQLString) },
-				correo: { type: new GraphQLNonNull(GraphQLString) },
-				clave: { type: new GraphQLNonNull(GraphQLString) }
+				direccion: { type: new GraphQLNonNull(GraphQLString) },
+				telefono: { type: new GraphQLNonNull(GraphQLString) },
+				correo: { type: new GraphQLNonNull(GraphQLString) }
 			},
-			resolve: (_,{cedula,nombre,apellido,correo,clave}) =>
+			resolve: (_,{cedula,nombre,apellido,direccion,telefono,correo}) =>
 				Profesordb.update(
 					{ cedula },
-					{ cedula, nombre, apellido, correo, clave },
+					{ cedula, nombre, apellido, direccion, telefono, correo },
 					{ upsert: true, new: true, safe: true, returnNewDocument: true }
 				)
 		},
@@ -658,32 +666,30 @@ const Mutation = new GraphQLObjectType({
 			resolve: (_,{_id_nota}) =>
 				Notadb.findByIdAndRemove({ _id: _id_nota })
 		},
-		personal: {
-			description: 'crear-editar personal',
-			type: Personal,
+		usuario: {
+			description: 'crear-editar usuario',
+			type: Usuario,
 			args: {
 				cedula: { type: new GraphQLNonNull(GraphQLString) },
-				nombre: { type: new GraphQLNonNull(GraphQLString) },
-				apellido: { type: new GraphQLNonNull(GraphQLString) },
-				correo: { type: new GraphQLNonNull(GraphQLString) },
+				nombres: { type: new GraphQLNonNull(GraphQLString) },
 				grado: { type: new GraphQLNonNull(GraphQLInt) },
 				clave: { type: new GraphQLNonNull(GraphQLString) }
 			},
-			resolve: (_,{cedula,nombre,apellido,correo,grado,clave}) =>
-				Personaldb.update(
+			resolve: (_,{cedula,nombres,grado,clave}) =>
+				Usuariodb.update(
 					{ cedula },
-					{ cedula, nombre, apellido, correo, grado, clave },
+					{ cedula, nombres, grado, clave },
 					{ upsert: true, new: true, safe: true, returnNewDocument: true }
 				)
 		},
-		remove_personal: {
-			description: 'elimina personal',
-			type: Personal,
+		remove_usuario: {
+			description: 'elimina usuario',
+			type: Usuario,
 			args: {
-				_id_personal: { type: new GraphQLNonNull(GraphQLID) }
+				_id_usuario: { type: new GraphQLNonNull(GraphQLID) }
 			},
-			resolve: (_,{_id_personal}) =>
-				Personaldb.findByIdAndRemove({ _id: _id_personal })
+			resolve: (_,{_id_usuario}) =>
+				Usuariodb.findByIdAndRemove({ _id: _id_usuario })
 		},
 	}
 })
