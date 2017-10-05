@@ -281,7 +281,13 @@ const Query = new GraphQLObjectType({
 			description: 'todas la carreras',
 			type: new GraphQLList(Carrera),
       args: {},
-      resolve: (_,{}) => Carreradb.find({})
+      resolve: (_,{},rootValue) => /*{
+        console.log({ rootValue: { session } })
+        Carreradb.find({})
+      }*/
+      Auth(rootValue.session.auth,[1,2,3],
+        Carreradb.find({})
+      )
 		},
 		materia_all: {
 			description: 'todas las materias',
@@ -551,7 +557,7 @@ const Mutation = new GraphQLObjectType({
       resolve: (_,{_id_alumno,image}) =>
         Alumnodb.update(
           { _id: _id_alumno },
-          { image },
+          { $set: { image } },
           { upsert: true, new: true, safe: true, returnNewDocument: true }
         )
     },
@@ -657,7 +663,7 @@ const Mutation = new GraphQLObjectType({
       resolve: (_,{_id_profesor,image}) =>
         Profesordb.update(
           { _id: _id_profesor },
-          { image },
+          { $set: { image } },
           { upsert: true, new: true, safe: true, returnNewDocument: true }
         )
     },
@@ -794,7 +800,7 @@ const Mutation = new GraphQLObjectType({
       resolve: (_,{_id_coordinador,image}) =>
         Coordinadordb.update(
           { _id: _id_coordinador },
-          { image },
+          { $set: { image } },
           { upsert: true, new: true, safe: true, returnNewDocument: true }
         )
     },
@@ -836,7 +842,7 @@ const Mutation = new GraphQLObjectType({
       resolve: (_,{_id_administrador,image}) =>
         Administradordb.update(
           { _id: _id_administrador },
-          { image },
+          { $set: { image } },
           { upsert: true, new: true, safe: true, returnNewDocument: true }
         )
     },
@@ -851,6 +857,19 @@ const Mutation = new GraphQLObjectType({
 		},
 	}
 })
+
+const Auth = (auth,perm,data) => {
+  console.log( auth )
+  if (auth) {
+    const grado = Number(auth.grado)
+    if (typeof grado === "number" && grado > 0) {
+      if(perm.indexOf(grado) > -1) {
+        return data
+      }
+    }
+  }
+  return null
+}
 
 module.exports = new GraphQLSchema({
   query: Query,

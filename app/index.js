@@ -23,16 +23,33 @@ const FileStorage = multer.diskStorage({
     cb(null, 'avatars/')
   },
   filename: function (req, file, cb) {
-    if (req.session.auth) {
-      const file = path.resolve('avatars/' + req.session.auth.cedula + '.png')
+    let auth = req.session.auth
+    if (auth) {
+      const file = path.resolve('avatars/' + auth.cedula)
       if( fs.existsSync( file ) ) {
         fs.unlinkSync( file )
+      } else {
+        ChangeImage(auth)
+        req.session.auth.image = auth.cedula + '.png'
       }
-      cb(null, req.session.auth.cedula)
+      cb(null, auth.cedula + '.png')
     }
   }
 })
 const FileUpload = multer({ storage: FileStorage })
+const ChangeImage = (auth) => {
+  let tgrado = Grado(auth.grado)
+  Query(`
+      mutation {
+        ${tgrado}_image (
+          _id_${tgrado}:"${auth._id}"
+          image:"${auth.cedula}.png"
+        ) {
+          _id
+        }
+      } 
+  `)
+}
 /**
  * IMPLEMENTO PARA UPLOAD IMAGES
  */
@@ -65,40 +82,33 @@ app.use('/graphiql', graphqlHTTP({
   graphiql: true
 }))
 
+app.use('/QuerySecure', graphqlHTTP((req) => {
+  const v = ({
+    schema: MyGraphQLSchema,
+    rootValue: { session: req.session },
+    graphiql: true
+  })
+  // console.log( v.rootValue )
+  return v
+}))
+
 app.post('/login', (req, res) => {
   let { grado, correo, clave} = req.body
   
-  grado = Number( grado) 
-  
-  const tgrado =
-    (grado === 1) ? 'administrador_auth' :
-    (grado === 2) ? 'coordinador_auth' :
-    (grado === 3) ? 'profesor_auth' :
-    (grado === 4) ? 'alumno_auth' : null
+  const tgrado = Grado(grado)
 
   if (!tgrado) {
     return res.json({ faild: true })
-  } 
+  }
 
   Query(`
       query {
-        ${tgrado} (
-          correo:"${correo}"
-          clave:"${clave}"
-        ) {
-          _id
-          cedula
-          correo
-          nombre
-          apellido
-          sexo
-          direccion
-          telefono
-          image
-        }
-      } 
+        ${tgrado}_auth ( correo:"${correo}" clave:"${clave}" )
+        { _id cedula correo nombre apellido sexo direccion telefono image }
+      }
   `).then(resp => {
-    const auth = resp.data.alumno_auth
+    const auth = resp.data[`${tgrado}_auth`]
+    console.log( auth )
     if (auth) {
       auth.grado = grado
       req.session.auth = auth
@@ -135,8 +145,8 @@ app.post('/query', (req, res) => {
 /**
  * IMPLEMENTO PARA UPLOAD IMAGES
  */
-app.post('/avatar', FileUpload.single('avatar'), async (req, res) => {
-  res.redirect('/')
+app.post('/avatar', FileUpload.single('avatar'), (req, res) => {
+  res.json({ ok: true })
 })
 /**
  * IMPLEMENTO PARA UPLOAD IMAGES
@@ -154,6 +164,20 @@ const Query = (query) =>
     source: query
   })
 /*** QUERY-GRAPHQL ***/
+
+/**
+ * DETERMINA GRADO
+ */
+const Grado = (grado) => {
+  grado = Number( grado)
+  return (grado === 1) ? 'administrador' :
+    (grado === 2) ? 'coordinador' :
+    (grado === 3) ? 'profesor' :
+    (grado === 4) ? 'alumno' : null
+}
+/**
+ * DETERMINA GRADO
+ */
 
 Server.listen(4000, function () {
   console.log('escucha puerto :4000','...start...')

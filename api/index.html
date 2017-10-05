@@ -55,7 +55,7 @@
       &nbsp;&nbsp;
       <textarea v-model="resp"></textarea>
       <br /><br />
-      <input type="file" name="avatar" id="avatar" accept="image/x-png" v-on:change="sendImage" />
+      <input type="file" name="avatar" id="avatar" accept="image/x-png,image/jpeg" v-on:change="sendImage" />
     </div>
 
 
@@ -109,8 +109,9 @@
                     <div>
                       <h1>Loginx</h1>
                       <form action="#" method="post" name="login" v-on:submit.prevent="sendLogin">
-                        
-                        <input type="hidden" name="grado" v-model="grado" />
+                        <div v-show="$store.state.faild_auth" style="color:red;">Fallo inicio de sesion</div>
+                        <input type="text" name="grado" v-model="grado" />
+                        <br /></br />
                         <input type="email" name="correo" placeholder="Correo..." required v-model="correo" />
                         <br /><br />
                         <input type="password" name="clave" placeholder="Contraseña" required v-model="clave" />
@@ -232,9 +233,10 @@
             var formData = new FormData()
             var imagefile = document.querySelector('#avatar')
             formData.append("avatar", imagefile.files[0])
-            axios.post('/test', formData, { header: { 'content-type': 'multipart/form-data' } })
+            axios.post('/avatar', formData, { header: { 'content-type': 'multipart/form-data' } })
               .then(resp => {
-                // console.log( resp )
+                // actualiza el auth para cargar la imagen nueva
+                this.$store.state.auth = null
               })
           }
         },
