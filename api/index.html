@@ -7,17 +7,35 @@
         width: 400px;
         height: 200px;
       }
+      th {
+        text-align: left;
+      }
+      td {
+        padding: 15px;
+        text-align: left;
+      }
     </style>
   </head>
   <body>
 
     <div id="app">
       <h1>{{test}}</h1>
+      <table v-show="$store.state.auth">
+          <tr>
+            <th>
+              <img v-bind:src="`/avatar/${($store.state.auth) ? $store.state.auth.image : 'default.png'}`" width="200" alt="avatar">
+            </th>
+          </tr>
+        <tr>
+          <th>Cedula</th>
+          <td>{{ ($store.state.auth) ? $store.state.auth.cedula : 'null' }}</td>
+        </tr>
+        <tr>
+          <th>Nombre y Apellido</th>
+          <td>{{ ($store.state.auth) ? ($store.state.auth.nombre + $store.state.auth.apellido) : 'null' }}</td>
+        </tr>
+      </table>
       <br />
-      {{ ($store.state.auth) ? $store.state.auth._id : 'null'}}
-      &nbsp;
-      <!-- <button type="button" v-on:click="click">Ok!</button> -->
-      &nbsp;&nbsp;
       <button type="button" v-on:click="stsession">Status Session</button>
       &nbsp;&nbsp;
       <button type="button" v-on:click="close">Close Session</button>
@@ -37,24 +55,17 @@
       &nbsp;&nbsp;
       <textarea v-model="resp"></textarea>
       <br /><br />
-      <form action="/avatar" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/x-png" />
-        <br /><br />
-        <button type="submit">Enviar</button>
-      </form>
-    </div> 
+      <input type="file" name="avatar" id="avatar" accept="image/x-png" v-on:change="sendImage" />
+    </div>
 
 
     <script src="/static/vue.min.js"></script>
-    <script src="/static/vue-router.js"></script>
-    <script src="/static/vuex.js"></script>
+    <script src="/static/vue-router.min.js"></script>
+    <script src="/static/vuex.min.js"></script>
     <script src="/static/axios.min.js"></script>
-    <!-- <script src="/socket.io/socket.io.js"></script> -->
-    <script> 
+    <script>
 
-     // var socket = io.connect()
-
-     var store = new Vuex.Store({
+      var store = new Vuex.Store({
         state: {
           auth: undefined,
           faild_auth: undefined,
@@ -112,7 +123,7 @@
           return {
             grado: '4',
             correo: 'rafael_ata1@hotmail.com',
-            clave: '19529584'
+            clave: '12345'
           }
         },
         methods: {
@@ -191,8 +202,6 @@
         //var login = to.matched.some(record => record.meta.requiresLogin) 
       })
 
-      
-
       var vm = new Vue({
         el: '#app',
         router,
@@ -219,13 +228,11 @@
           close () {
             this.$store.commit('CLOSEAUTH')
           },
-          sendImage () {
+          sendImage (event) {
             var formData = new FormData()
-            var imagefile = document.querySelector('#file')
-            formData.append("image", imagefile.files[0])
-            console.log( imagefile.files[0] )
-            console.log( formData )
-            axios.post('/avatar', { formData }, { header: { 'Content-Type': 'multipart/form-data' } })
+            var imagefile = document.querySelector('#avatar')
+            formData.append("avatar", imagefile.files[0])
+            axios.post('/test', formData, { header: { 'content-type': 'multipart/form-data' } })
               .then(resp => {
                 // console.log( resp )
               })
@@ -244,12 +251,12 @@
               this.$store.commit('REAUTH')
           })
 
-          /*this.$store.watch(
-            this.$store.getters.getFaildAuth, faild_auth => {
-              console.log('watched: ', faild_auth)
-          })*/
+          //this.$store.watch(
+          //  this.$store.getters.getFaildAuth, faild_auth => {
+          //    console.log('watched: ', faild_auth)
+          //})
         }
-      }) 
+      })
 
     </script>
   </body>

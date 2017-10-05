@@ -9,25 +9,39 @@ const Session = require('express-session')
 const mongoDBStore = require('connect-mongodb-session')(Session)
 const uuid = require('uuid')
 const multer = require('multer')
+const cors = require('cors')
+const fs = require('fs')
 
 const app = express()
 const Server = http.createServer(app)
 
-const FileStore = multer.diskStorage({
-  destination: function(req, file, callback) {
-    console.log( file.fieldname )
-    callback(null, "../avatars")
+/**
+ * IMPLEMENTO PARA UPLOAD IMAGES
+ */
+const FileStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'avatars/')
   },
-  filename: function(req, file, callback) {
-    callback(null, file.fieldname + "_" + Date.now() + "_" + file.originalname)
+  filename: function (req, file, cb) {
+    if (req.session.auth) {
+      const file = path.resolve('avatars/' + req.session.auth.cedula + '.png')
+      if( fs.existsSync( file ) ) {
+        fs.unlinkSync( file )
+      }
+      cb(null, req.session.auth.cedula)
+    }
   }
 })
+const FileUpload = multer({ storage: FileStorage })
+/**
+ * IMPLEMENTO PARA UPLOAD IMAGES
+ */
 
-const FileUpload = multer({ storage: FileStore }).single('avatar')
-
+app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use('/static', express.static( path.resolve('static') ))
+app.use('/avatar', express.static( path.resolve('avatars') ))
 
 const store = new mongoDBStore({
   uri: 'mongodb://localhost:27017/test-graphql',
@@ -104,9 +118,7 @@ app.post('/closeSession', (req, res) => {
   res.json({ auth: undefined })
 })
 
-
 /*** QUERY FRONT TO GRAPHQL ***/
-
 app.post('/query', (req, res) => {
   if (req.session.auth) {
     const { query } = req.body
@@ -118,17 +130,17 @@ app.post('/query', (req, res) => {
     res.json({ faild: true })
   }
 })
-
 /*** QUERY FRONT TO GRAPHQL ***/
 
-app.post('/avatar', (req, res) => {
-  FileUpload(req, res, function (err) {
-    if (err) {
-      return res.json({ faild: true })
-    }
-    return res.json({ faild: false })
-  })
+/**
+ * IMPLEMENTO PARA UPLOAD IMAGES
+ */
+app.post('/avatar', FileUpload.single('avatar'), async (req, res) => {
+  res.redirect('/')
 })
+/**
+ * IMPLEMENTO PARA UPLOAD IMAGES
+ */
 
 app.use('*', (req, res) => {
   //res.end('<h1>Error 404</h1>')
@@ -136,13 +148,11 @@ app.use('*', (req, res) => {
 })
 
 /*** QUERY-GRAPHQL ***/
-
 const Query = (query) =>
   graphql({
      schema: MyGraphQLSchema,
     source: query
   })
-
 /*** QUERY-GRAPHQL ***/
 
 Server.listen(4000, function () {
